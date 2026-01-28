@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useToast } from "./ToastProvider";
 
 interface User {
   id: string;
@@ -24,6 +25,8 @@ export default function NewChatModal({
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -38,9 +41,12 @@ export default function NewChatModal({
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
+      } else {
+        showToast("Failed to load users", "error");
       }
     } catch (error) {
       console.error("Error fetching users:", error);
+      showToast("Unable to load users", "error");
     } finally {
       setLoading(false);
     }
@@ -62,11 +68,15 @@ export default function NewChatModal({
 
       if (response.ok) {
         const chat = await response.json();
+        showToast("Chat created successfully", "success");
         onChatCreated(chat.id);
         onClose();
+      } else {
+        showToast("Failed to create chat", "error");
       }
     } catch (error) {
       console.error("Error creating chat:", error);
+      showToast("Unable to create chat. Please try again.", "error");
     } finally {
       setCreating(false);
     }
@@ -85,6 +95,15 @@ export default function NewChatModal({
 		if (parts.length === 1) return parts[0];
 		return parts[0] + parts[parts.length - 1];
 	};
+
+  const filteredUsers = users.filter((user) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      user.name.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query)
+    );
+  });
 
   if (!isOpen) return null;
 
@@ -119,6 +138,8 @@ export default function NewChatModal({
           <input
             type="text"
             placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
@@ -128,12 +149,12 @@ export default function NewChatModal({
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             </div>
-          ) : users.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              No users found
+              {searchQuery ? "No users found matching your search" : "No users found"}
             </div>
           ) : (
-            users.map((user) => (
+            filteredUsers.map((user) => (
               <div
                 key={user.id}
                 onClick={() => !creating && createChat(user.id)}

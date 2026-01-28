@@ -12,6 +12,7 @@ export default function Home() {
   const router = useRouter();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+  const [isChatListOpen, setIsChatListOpen] = useState(false);
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -39,10 +40,31 @@ export default function Home() {
   return (
     <div className="flex h-screen overflow-hidden bg-white dark:bg-gray-900">
       {/* Sidebar with chat list */}
-      <div className="w-full md:w-96 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+      <div className={`${isChatListOpen ? 'fixed inset-0 z-40' : 'hidden'} md:flex md:relative md:inset-auto w-full md:w-96 border-r border-gray-200 dark:border-gray-700 flex-col bg-white dark:bg-gray-900`}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-blue-600">
-          <h1 className="text-xl font-bold text-white">Telegram</h1>
+          <div className="flex items-center">
+            <button
+              onClick={() => setIsChatListOpen(false)}
+              className="md:hidden p-2 mr-2 rounded-full hover:bg-blue-700 transition"
+              title="Close menu"
+            >
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <h1 className="text-xl font-bold text-white">Telegram</h1>
+          </div>
           <div className="flex items-center space-x-2">
             <div className="text-white text-sm font-medium">
               {session.user.name}
@@ -72,7 +94,10 @@ export default function Home() {
         {/* Chat List */}
         <div className="flex-1 overflow-hidden">
           <ChatList
-            onChatSelect={setSelectedChatId}
+            onChatSelect={(chatId) => {
+              setSelectedChatId(chatId);
+              setIsChatListOpen(false);
+            }}
             selectedChatId={selectedChatId}
             onNewChat={() => setIsNewChatModalOpen(true)}
           />
@@ -81,6 +106,30 @@ export default function Home() {
 
       {/* Main chat window */}
       <div className="flex-1 flex flex-col">
+        {/* Mobile header with hamburger menu */}
+        <div className="md:hidden flex items-center p-4 border-b border-gray-200 dark:border-gray-700 bg-blue-600">
+          <button
+            onClick={() => setIsChatListOpen(true)}
+            className="p-2 rounded-full hover:bg-blue-700 transition"
+            title="Open menu"
+          >
+            <svg
+              className="w-6 h-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+          <h1 className="ml-3 text-xl font-bold text-white">Telegram</h1>
+        </div>
+        
         <ChatWindow chatId={selectedChatId} currentUserId={session.user.id} />
       </div>
 
