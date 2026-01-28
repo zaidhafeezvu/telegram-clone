@@ -49,29 +49,57 @@ pnpm install
 cp .env.example .env
 ```
 
-Edit `.env` and update with your database credentials and secrets:
+Edit `.env` and update with your database credentials:
 ```env
-DATABASE_URL=postgresql://username:password@localhost:5432/telegram
-BETTER_AUTH_SECRET=your-secret-key-here
+DATABASE_URL=postgresql://postgres:password@localhost:5432/telegram
+BETTER_AUTH_SECRET=$(openssl rand -base64 32)
 BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
 ```
 
-4. Run database migrations:
+4. Set up the database:
+
+First, create a PostgreSQL database named `telegram` (or use your preferred name and update `.env`):
 ```bash
-pnpm drizzle-kit generate
-pnpm drizzle-kit migrate
+# Using PostgreSQL command line
+createdb telegram
+
+# Or using psql
+psql -U postgres -c "CREATE DATABASE telegram;"
 ```
 
-5. Start the development server:
+Then run the migrations:
+```bash
+pnpm db:generate  # Generate migration files (already done)
+pnpm db:migrate   # Apply migrations to database
+```
+
+5. (Optional) Seed the database with demo data:
+```bash
+pnpm db:seed
+```
+
+This creates three demo users:
+- alice@example.com / password123
+- bob@example.com / password123
+- charlie@example.com / password123
+
+6. Start the development server:
 ```bash
 pnpm dev
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser
+7. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ### First Time Setup
 
+**Option A: Use Demo Data (Recommended for testing)**
+1. Run `pnpm db:seed` to create demo users
+2. Navigate to [http://localhost:3000/login](http://localhost:3000/login)
+3. Sign in with any demo account (e.g., alice@example.com / password123)
+4. Start messaging!
+
+**Option B: Create New Account**
 1. Navigate to [http://localhost:3000/signup](http://localhost:3000/signup)
 2. Create your account
 3. Sign in and start messaging!
@@ -106,6 +134,10 @@ telegram-clone/
 - `pnpm start` - Start production server
 - `pnpm lint` - Run Biome linter
 - `pnpm format` - Format code with Biome
+- `pnpm db:generate` - Generate database migration files
+- `pnpm db:migrate` - Apply migrations to database
+- `pnpm db:studio` - Open Drizzle Studio (database GUI)
+- `pnpm db:seed` - Seed database with demo data
 
 ## Database Schema
 

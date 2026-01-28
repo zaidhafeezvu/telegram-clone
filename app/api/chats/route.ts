@@ -12,78 +12,87 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    // Get all chats where the user is a participant
-    const userChats = await db
-      .select({
-        chat: chats,
-        lastMessage: messages,
-      })
-      .from(chatParticipants)
-      .where(eq(chatParticipants.userId, session.user.id))
-      .leftJoin(chats, eq(chatParticipants.chatId, chats.id))
-      .leftJoin(messages, and(eq(messages.chatId, chats.id)))
-      .orderBy(desc(chats.updatedAt));
+	try {
+		// Get all chats where the user is a participant
+		const userChats = await db
+			.select({
+				chat: chats,
+				lastMessage: messages,
+			})
+			.from(chatParticipants)
+			.where(eq(chatParticipants.userId, session.user.id))
+			.leftJoin(chats, eq(chatParticipants.chatId, chats.id))
+			.leftJoin(messages, and(eq(messages.chatId, chats.id)))
+			.orderBy(desc(chats.updatedAt));
 
-    // Get chat participants for each chat
-    const chatIds = userChats.map((uc) => uc.chat.id);
-    const participants = await db
-      .select({
-        chatId: chatParticipants.chatId,
-        user: users,
-      })
-      .from(chatParticipants)
-      .where(inArray(chatParticipants.chatId, chatIds))
-      .leftJoin(users, eq(chatParticipants.userId, users.id));
+		// Filter out null chats and get chat IDs
+		const validChats = userChats.filter(
+			(uc): uc is typeof uc & { chat: NonNullable<typeof uc.chat> } =>
+				uc.chat !== null,
+		);
+		const chatIds = validChats.map((uc) => uc.chat.id);
 
-    // Get last message for each chat
-    const lastMessages = await db
-      .select()
-      .from(messages)
-      .where(inArray(messages.chatId, chatIds))
-      .orderBy(desc(messages.createdAt));
+		if (chatIds.length === 0) {
+			return NextResponse.json([]);
+		}
 
-    // Group by chatId and get the latest message
-    const lastMessagesByChat = lastMessages.reduce(
-      (acc, msg) => {
-        if (
-          !acc[msg.chatId] ||
-          new Date(msg.createdAt) > new Date(acc[msg.chatId].createdAt)
-        ) {
-          acc[msg.chatId] = msg;
-        }
-        return acc;
-      },
-      {} as Record<string, typeof messages.$inferSelect>,
-    );
+		const participants = await db
+			.select({
+				chatId: chatParticipants.chatId,
+				user: users,
+			})
+			.from(chatParticipants)
+			.where(inArray(chatParticipants.chatId, chatIds))
+			.leftJoin(users, eq(chatParticipants.userId, users.id));
 
-    // Organize data
-    const chatsWithDetails = userChats.map((uc) => {
-      const chatParticipants = participants
-        .filter((p) => p.chatId === uc.chat.id)
-        .map((p) => p.user);
+		// Get last message for each chat
+		const lastMessages = await db
+			.select()
+			.from(messages)
+			.where(inArray(messages.chatId, chatIds))
+			.orderBy(desc(messages.createdAt));
 
-      // For 1-on-1 chats, get the other user
-      const otherUser = uc.chat.isGroup
-        ? null
-        : chatParticipants.find((p) => p.id !== session.user.id);
+		// Group by chatId and get the latest message
+		const lastMessagesByChat = lastMessages.reduce(
+			(acc, msg) => {
+				if (
+					!acc[msg.chatId] ||
+					new Date(msg.createdAt) > new Date(acc[msg.chatId].createdAt)
+				) {
+					acc[msg.chatId] = msg;
+				}
+				return acc;
+			},
+			{} as Record<string, typeof messages.$inferSelect>,
+		);
 
-      return {
-        ...uc.chat,
-        participants: chatParticipants,
-        otherUser,
-        lastMessage: lastMessagesByChat[uc.chat.id] || null,
-      };
-    });
+		// Organize data
+		const chatsWithDetails = validChats.map((uc) => {
+			const chatParticipantsList = participants
+				.filter((p) => p.chatId === uc.chat.id)
+				.map((p) => p.user);
 
-    return NextResponse.json(chatsWithDetails);
-  } catch (error) {
-    console.error("Error fetching chats:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch chats" },
-      { status: 500 },
-    );
-  }
+			// For 1-on-1 chats, get the other user
+			const otherUser = uc.chat.isGroup
+				? null
+				: chatParticipantsList.find((p) => p && p.id !== session.user.id);
+
+			return {
+				...uc.chat,
+				participants: chatParticipantsList,
+				otherUser,
+				lastMessage: lastMessagesByChat[uc.chat.id] || null,
+			};
+		});
+
+		return NextResponse.json(chatsWithDetails);
+	} catch (error) {
+		console.error("Error fetching chats:", error);
+		return NextResponse.json(
+			{ error: "Failed to fetch chats" },
+			{ status: 500 },
+		);
+	}
 }
 
 export async function POST(request: NextRequest) {
