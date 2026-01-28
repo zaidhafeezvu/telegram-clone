@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Telegram Clone
+
+A modern, real-time messaging application inspired by Telegram, built with Next.js 15, TypeScript, and PostgreSQL.
+
+## Features
+
+- 🔐 User authentication (email/password)
+- 💬 Real-time messaging
+- 👥 One-on-one chats
+- 📱 Responsive design (mobile & desktop)
+- 🌓 Dark mode support
+- 👤 User profiles
+- 🔔 Message notifications
+- ⚡ Fast and performant
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **Database**: PostgreSQL
+- **ORM**: Drizzle ORM
+- **Authentication**: Better Auth
+- **Package Manager**: pnpm
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ installed
+- PostgreSQL database running
+- pnpm installed (`npm install -g pnpm`)
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd telegram-clone
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+pnpm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Edit `.env` and update with your database credentials and secrets:
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/telegram
+BETTER_AUTH_SECRET=your-secret-key-here
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+```
 
-## Learn More
+4. Run database migrations:
+```bash
+pnpm drizzle-kit generate
+pnpm drizzle-kit migrate
+```
 
-To learn more about Next.js, take a look at the following resources:
+5. Start the development server:
+```bash
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### First Time Setup
 
-## Deploy on Vercel
+1. Navigate to [http://localhost:3000/signup](http://localhost:3000/signup)
+2. Create your account
+3. Sign in and start messaging!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+telegram-clone/
+├── app/                    # Next.js app directory
+│   ├── (auth)/            # Authentication pages (login, signup)
+│   ├── api/               # API routes
+│   │   ├── auth/          # Auth endpoints
+│   │   ├── chats/         # Chat management
+│   │   ├── messages/      # Message handling
+│   │   └── users/         # User management
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Main messaging page
+├── components/            # React components
+│   ├── ChatList.tsx       # Chat list sidebar
+│   ├── ChatWindow.tsx     # Message display & input
+│   └── NewChatModal.tsx   # New chat creation modal
+├── lib/                   # Utility libraries
+│   ├── auth/              # Authentication config
+│   └── db/                # Database config & schema
+└── public/                # Static assets
+```
+
+## Scripts
+
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run Biome linter
+- `pnpm format` - Format code with Biome
+
+## Database Schema
+
+The app uses the following main tables:
+
+- **users**: User accounts and profiles
+- **chats**: Chat conversations (1-on-1 and groups)
+- **chat_participants**: Links users to chats
+- **messages**: Individual messages in chats
+
+## Features Overview
+
+### Authentication
+- Email/password authentication using Better Auth
+- Secure password hashing with bcryptjs
+- Session management
+
+### Messaging
+- Send and receive text messages
+- Real-time updates via polling
+- Message history
+- Typing indicators (placeholder)
+
+### User Interface
+- Clean, modern Telegram-inspired design
+- Blue accent color scheme
+- Responsive layout for mobile and desktop
+- Dark mode support
+- Avatar placeholders with initials
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is open source and available under the MIT License.
