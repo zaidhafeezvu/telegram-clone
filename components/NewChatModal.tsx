@@ -72,14 +72,19 @@ export default function NewChatModal({
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+	const getInitials = (name: string) => {
+		const trimmed = name.trim();
+		if (!trimmed) return "?";
+
+		const parts = trimmed
+			.split(" ")
+			.filter((part) => part.length > 0)
+			.map((part) => part[0].toUpperCase());
+
+		if (parts.length === 0) return "?";
+		if (parts.length === 1) return parts[0];
+		return parts[0] + parts[parts.length - 1];
+	};
 
   if (!isOpen) return null;
 

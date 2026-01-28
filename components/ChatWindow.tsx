@@ -182,6 +182,7 @@ export default function ChatWindow({ chatId, currentUserId }: ChatWindowProps) {
               }}
               placeholder="Type a message..."
               rows={1}
+              maxLength={5000}
               className="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-blue-500 outline-none resize-none"
             />
           </div>
